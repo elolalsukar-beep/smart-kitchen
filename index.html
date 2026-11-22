@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FF6B2B">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="مطبخك الذكي">
+    <title>مطبخك الذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B2B;
+            --primary-dark: #E05316;
+            --secondary: #1E3A5F;
+            --bg: #FAF8F5;
+            --card: #FFFFFF;
+            --text: #222222;
+            --muted: #777777;
+            --border: #E6E2DC;
+            --ai-grad: linear-gradient(135deg, #6366F1, #8B5CF6);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 85px; overflow-x: hidden; }
+
+        header {
+            background: var(--card);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 8px;
+        }
+        .brand { display: flex; align-items: center; gap: 9px; }
+        .logo-box {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #FF9E44, #FF6B2B);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 19px; font-weight: bold; flex-shrink: 0;
+        }
+        .brand h1 { font-size: 17px; font-weight: 800; color: var(--secondary); line-height: 1.2; }
+        .offline-status { font-size: 10px; color: #16A34A; font-weight: 700; display: block; }
+
+        /* زرار تنزيل على الأندرويد */
+        .install-android-btn {
+            background: #16A34A;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 7px 11px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 3px 10px rgba(22, 163, 74, 0.28);
+            white-space: nowrap;
+        }
+        .install-android-btn:active { transform: scale(0.96); background: #15803D; }
+
+        .ai-side-btn {
+            position: fixed;
+            left: 14px;
+            bottom: 92px;
+            background: var(--ai-grad);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+            cursor: pointer;
+            z-index: 95;
+            transition: transform 0.2s;
+        }
+        .ai-side-btn:active { transform: scale(0.95); }
+        .online-dot { width: 8px; height: 8px; background: #4ADE80; border-radius: 50%; display: inline-block; }
+
+        .container { max-width: 520px; margin: 0 auto; padding: 16px; }
+        .screen { display: none; animation: fadeIn 0.25s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .field-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 13px 15px;
+            margin-bottom: 13px;
+            transition: border-color 0.2s;
+        }
+        .field-card.required { border-color: #3B82F6; background: #F8FAFF; }
+        .field-label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; font-weight: 700; color: var(--secondary); margin-bottom: 8px;
+        }
+        .badge-opt { font-size: 11px; color: var(--muted); background: #F1EFEA; padding: 2px 8px; border-radius: 6px; }
+        .badge-req { font-size: 11px; color: #2563EB; background: #DBEAFE; padding: 2px 8px; border-radius: 6px; }
+
+        input[type="text"] {
+            width: 100%; border: none; background: transparent;
+            font-size: 15px; color: var(--text); outline: none;
+        }
+
+        .chips-wrap { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+        .chip {
+            padding: 6px 11px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            border: 1px solid var(--border); background: #F9F8F6; color: var(--text);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .chip.selected { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+        .btn-main {
+            width: 100%; padding: 15px; border: none; border-radius: 14px;
+            background: var(--primary); color: white; font-size: 17px; font-weight: 800;
+            cursor: pointer; box-shadow: 0 6px 16px rgba(255, 107, 43, 0.3);
+            margin-top: 6px;
+        }
+        .btn-main:active { background: var(--primary-dark); transform: scale(0.99); }
+
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .back-btn { background: none; border: none; color: var(--secondary); font-weight: 700; font-size: 14px; cursor: pointer; }
+        .carousel {
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+            gap: 14px; padding-bottom: 10px; scrollbar-width: none;
+        }
+        .carousel::-webkit-scrollbar { display: none; }
+        .recipe-card {
+            min-width: 100%; scroll-snap-align: center;
+            background: var(--card); border-radius: 18px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid var(--border);
+        }
+        .recipe-img { width: 100%; height: 195px; object-fit: cover; background: #EEE; }
+        .recipe-body { padding: 16px; }
+        .recipe-meta { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .tag { font-size: 11px; background: #FFF3ED; color: var(--primary); padding: 3px 9px; border-radius: 8px; font-weight: 700; }
+        .recipe-title { font-size: 19px; font-weight: 800; color: var(--secondary); margin-bottom: 10px; }
+        .section-h { font-size: 14px; font-weight: 800; color: var(--primary); margin: 12px 0 6px; }
+        .recipe-list { padding-right: 18px; font-size: 14px; line-height: 1.7; color: #333; }
+        .card-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-fav {
+            flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--primary);
+            background: white; color: var(--primary); font-weight: 700; cursor: pointer;
+        }
+        .btn-fav.saved { background: var(--primary); color: white; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 14px; background: #EFECE6; padding: 4px; border-radius: 12px; }
+        .tab-btn {
+            flex: 1; padding: 8px; border: none; border-radius: 9px; background: transparent;
+            font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer;
+        }
+        .tab-btn.active { background: white; color: var(--secondary); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .mini-item {
+            display: flex; gap: 12px; background: white; padding: 10px; border-radius: 14px;
+            margin-bottom: 10px; border: 1px solid var(--border); align-items: center; cursor: pointer;
+        }
+        .mini-item img { width: 68px; height: 68px; border-radius: 10px; object-fit: cover; }
+        .mini-info h4 { font-size: 15px; color: var(--secondary); }
+        .mini-info p { font-size: 12px; color: var(--muted); }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 200; align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: white; width: 100%; max-width: 420px; border-radius: 18px;
+            padding: 18px; animation: fadeIn 0.2s ease;
+        }
+
+        .install-steps {
+            background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;
+            padding: 12px; margin: 10px 0 14px; font-size: 13px; line-height: 1.8; color: #1E293B;
+        }
+
+        nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+            display: flex; border-top: 1px solid var(--border); padding: 8px 0; z-index: 100;
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <div class="logo-box">🍲</div>
+        <div>
+            <h1>مطبخك الذكي</h1>
+            <span class="offline-status">● يعمل بدون نت</span>
+        </div>
+    </div>
+    <button class="install-android-btn" id="install-btn" onclick="triggerAndroidInstall()">
+        📲 تنزيل على الأندرويد
+    </button>
+</header>
+
+<div class="container">
+    <div id="screen-home" class="screen active">
+        <div class="field-card">
+            <div class="field-label">
+                <span>🍽️ أكلت أو طبخت إيه إمبارح؟</span>
+                <span class="badge-opt">اختياري</span>
+            </div>
+            <input type="text" id="yesterday-input" placeholder="مثال: محشي كرنب، رز وبسلة...">
+        </div>
+
+        <div class="field-card required">
+            <div class="field-label">
+                <span>🧺 المكونات المتاحة في البيت</span>
+                <span class="badge-req">إجباري</span>
+            </div>
+            <input type="text" id="ingredients-input" placeholder="اكتب المكونات: بطاطس، طماطم، رز، فراخ...">
+        </div>
+
+        <div class="field-card">
+            <div class="field-label">
+                <span>⏱️ الوقت المطلوب للتحضير</span>
+                <span class="badge-opt">اختياري</span>
+            </div>
+            <div class="chips-wrap" id="time-chips">
+                <div class="chip" data-val="أقل من 30 دقيقة">أقل من 30 دقيقة</div>
+                <div class="chip" data-val="من 30 إلى 60 دقيقة">من 30 لـ 60 دقيقة</div>
+                <div class="chip" data-val="من ساعة إلى ساعة ونص">ساعة - ساعة ونص</div>
+                <div class="chip" data-val="من ساعة ونص إلى ساعتين">ساعة ونص - ساعتين</div>
+                <div class="chip" data-val="أكثر من ساعتين">أكثر من ساعتين</div>
+            </div>
+        </div>
+
+        <div class="field-card">
+            <div class="field-label">
+                <span>🍳 نوع الوجبة</span>
+                <span class="badge-opt">اختياري</span>
+            </div>
+            <div class="chips-wrap" id="meal-chips">
+                <div class="chip" data-val="فطور">فطور</div>
+                <div class="chip" data-val="غداء">غداء</div>
+                <div class="chip" data-val="عشاء">عشاء</div>
+                <div class="chip" data-val="تحلية / سناك">تحلية / سناك</div>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="findRecipes()">ابحث واقترح لي وصفة 🔍</button>
+    </div>
+
+    <div id="screen-results" class="screen">
+        <div class="results-header">
+            <button class="back-btn" onclick="switchScreen('home')">→ رجوع للبحث</button>
+            <span id="results-count" style="font-size:12px; color:var(--muted); font-weight:700;">اسحب لليسار لباقي الوصفات</span>
+        </div>
+        <div class="carousel" id="recipes-carousel"></div>
+    </div>
+
+    <div id="screen-library" class="screen">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="renderLibrary('history', this)">وصفاتي (السجل)</button>
+            <button class="tab-btn" onclick="renderLibrary('fav', this)">المفضلة ❤️</button>
+            <button class="tab-btn" onclick="renderLibrary('arabic', this)">وصفات عربية</button>
+        </div>
+        <div id="library-list"></div>
+    </div>
+</div>
+
+<button class="ai-side-btn" onclick="openAIModal()">
+    <span class="online-dot"></span> ✨ مساعد الذكاء الاصطناعي
+</button>
+
+<!-- نافذة الذكاء الاصطناعي -->
+<div class="modal-overlay" id="ai-modal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="color:#4F46E5; font-size:16px;">✨ تأليف وصفة بالذكاء الاصطناعي (نت)</h3>
+            <button onclick="closeAIModal()" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">اكتب أي مكونات غريبة أو اطلب أكلة معينة وهنجهزها بالصورة والطريقة ونحفظها في مكتبتك أوفلاين:</p>
+        <input type="text" id="ai-prompt" placeholder="مثال: عندي تونة ومكرونة وعايز أكلة جديدة..." style="border:1px solid #DDD; padding:10px; border-radius:10px; margin-bottom:12px;">
+        <button class="btn-main" style="background:var(--ai-grad); margin-top:0;" onclick="generateAIRecipe()">ابتكر الوصفة الآن ✨</button>
+    </div>
+</div>
+
+<!-- نافذة تعليمات التثبيت على الأندرويد -->
+<div class="modal-overlay" id="install-modal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="color:#16A34A; font-size:16px;">📲 تنزيل "مطبخك الذكي" على الأندرويد</h3>
+            <button onclick="closeInstallModal()" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:13px; color:#444;">لتثبيت التطبيق على تليفونك كأيقونة مستقلة تعمل بدون إنترنت:</p>
+        <div class="install-steps">
+            1️⃣ اضغط على <strong>الثلاث نقط (⋮)</strong> أعلى يمين أو يسار متصفح جوجل كروم.<br>
+            2️⃣ اختر <strong>تثبيت التطبيق (Install app)</strong> أو <strong>إضافة إلى الشاشة الرئيسية (Add to Home screen)</strong>.<br>
+            3️⃣ اضغط <strong>تثبيت / إضافة</strong>، وهتلاقي أيقونة التطبيق نزلت على شاشة تليفونك فورًا!
+        </div>
+        <button class="btn-main" style="background:#16A34A; margin-top:0;" onclick="closeInstallModal()">فهمت، تمام 👍</button>
+    </div>
+</div>
+
+<nav>
+    <button class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+        <span class="nav-icon">🏠</span>
+        <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" id="nav-fav" onclick="openLibraryTab('fav')">
+        <span class="nav-icon">❤️</span>
+        <span>المفضلة</span>
+    </button>
+    <button class="nav-item" id="nav-lib" onclick="openLibraryTab('arabic')">
+        <span class="nav-icon">📚</span>
+        <span>مكتبة الوصفات</span>
+    </button>
+</nav>
+
+<script>
+    // دعم التثبيت المباشر على أندرويد (PWA Install Prompt)
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    async function triggerAndroidInstall() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                deferredPrompt = null;
+            }
+        } else {
+            document.getElementById('install-modal').classList.add('open');
+        }
+    }
+
+    function closeInstallModal() {
+        document.getElementById('install-modal').classList.remove('open');
+    }
+
+    const OFFLINE_RECIPES = [
+        {
+            id: 1,
+            title: "صينية بطاطس بالفراخ في الفرن",
+            time: "من ساعة إلى ساعة ونص",
+            meal: "غداء",
+            tags: ["بطاطس", "فراخ", "دجاج", "طماطم", "بصل"],
+            image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["دجاج مقطع", "بطاطس حلقات", "عصير طماطم", "بصل شرائح", "ثوم مفروم", "ملح وفلفل وبهارات"],
+            steps: ["تُتبل الفراخ بالبصل والبهارات لمدة 15 دقيقة.", "تُرص حلقات البطاطس في الصينية وفوقها الفراخ وعصير الطماطم.", "تُغطى بورق فويل وتدخل الفرن لمدة ساعة حتى تنضج، ثم يُحمر الوجه."]
+        },
+        {
+            id: 2,
+            title: "شكشوكة مصرية بالبيض والطماطم",
+            time: "أقل من 30 دقيقة",
+            meal: "فطور",
+            tags: ["بيض", "طماطم", "بصل", "فلفل"],
+            image: "https://images.unsplash.com/photo-1590412227252-5679685e48d7?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["4 بيضات", "3 حبات طماطم مقطعة", "بصلة مفرومة", "فلفل أخضر", "ملح وكمون"],
+            steps: ["يُشوح البصل والفلفل في قليل من الزيت حتى يذبل.", "تُضاف الطماطم والبهارات وتُترك 7 دقائق حتى تتسبك.", "تُكسر البيضات فوق الخليط وتُغطى الطاسة 5 دقائق حتى تمام النضج."]
+        },
+        {
+            id: 3,
+            title: "مكرونة بالصلصة الحمراء والثوم",
+            time: "أقل من 30 دقيقة",
+            meal: "غداء",
+            tags: ["مكرونة", "طماطم", "ثوم", "صلصة"],
+            image: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["كيس مكرونة", "عصير طماطم", "4 فصوص ثوم", "ملعقة صلصة", "ملح وفلفل وزعتر"],
+            steps: ["تُسلق المكرونة في ماء مغلي وملح لمدة 8 دقائق وتُصفى.", "يُحمر الثوم في الزيت ويُضاف عصير الطماطم والصلصة حتى تتسبك.", "تُخلط المكرونة مع الصلصة الساخنة وتُقدم فورًا."]
+        },
+        {
+            id: 4,
+            title: "كشري مصري أصيل",
+            time: "من ساعة إلى ساعة ونص",
+            meal: "غداء",
+            tags: ["رز", "أرز", "مكرونة", "عدس", "طماطم", "بصل"],
+            image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["أرز مصري", "عدس بجبة", "مكرونة مشكلة", "شعرية", "بصل مقرمش", "صلصة طماطم بالثوم والخل"],
+            steps: ["يُسلق العدس نصف سلقة، وتُسلق المكرونة.", "تُحمر الشعرية ويُضاف الأرز والعدس والماء حتى ينضج.", "تُحضر الصلصة بالثوم والخل وعصير الطماطم، ويُزين الوجه بالبصل المحمر."]
+        },
+        {
+            id: 5,
+            title: "بطاطس مهروسة بالثوم والكمون",
+            time: "من 30 إلى 60 دقيقة",
+            meal: "عشاء",
+            tags: ["بطاطس", "ثوم", "زيت", "كمون"],
+            image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["بطاطس مسلوقة", "فصين ثوم مفروم", "كمون وملح", "ملعقة زيت أو زبدة", "بقدونس"],
+            steps: ["تُقشر البطاطس المسلوقة وتُهرس جيدًا.", "يُشوح الثوم في الزيت سريعًا وتُضاف البطاطس والكمون والملح.", "تُقلب على نار هادئة 3 دقائق وتُقدم ساخنة."]
+        }
+    ];
+
+    let selectedTime = "";
+    let selectedMeal = "";
+    let savedHistory = JSON.parse(localStorage.getItem('smart_kitchen_history') || '[]');
+    let savedFavs = JSON.parse(localStorage.getItem('smart_kitchen_favs') || '[]');
+
+    document.querySelectorAll('#time-chips .chip').forEach(chip => {
+        chip.onclick = () => {
+            if (chip.classList.contains('selected')) {
+                chip.classList.remove('selected'); selectedTime = "";
+            } else {
+                document.querySelectorAll('#time-chips .chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected'); selectedTime = chip.dataset.val;
+            }
+        };
+    });
+
+    document.querySelectorAll('#meal-chips .chip').forEach(chip => {
+        chip.onclick = () => {
+            if (chip.classList.contains('selected')) {
+                chip.classList.remove('selected'); selectedMeal = "";
+            } else {
+                document.querySelectorAll('#meal-chips .chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected'); selectedMeal = chip.dataset.val;
+            }
+        };
+    });
+
+    function switchScreen(name) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + name).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if (name === 'home') document.getElementById('nav-home').classList.add('active');
+    }
+
+    function openLibraryTab(tabName) {
+        switchScreen('library');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabName === 'fav' ? 'nav-fav' : 'nav-lib').classList.add('active');
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        if (tabName === 'history') btns[0].classList.add('active');
+        if (tabName === 'fav') btns[1].classList.add('active');
+        if (tabName === 'arabic') btns[2].classList.add('active');
+        renderLibrary(tabName);
+    }
+
+    function findRecipes() {
+        const ingredientsRaw = document.getElementById('ingredients-input').value.trim();
+        if (!ingredientsRaw) {
+            alert("من فضلك اكتب المكونات المتاحة عندك الأول!");
+            return;
+        }
+        const yesterday = document.getElementById('yesterday-input').value.trim();
+        const userWords = ingredientsRaw.split(/[\s,،]+/).filter(w => w.length > 1);
+
+        let allAvailable = [...OFFLINE_RECIPES, ...savedHistory];
+        allAvailable = Array.from(new Map(allAvailable.map(item => [item.id, item])).values());
+
+        let matches = allAvailable.filter(recipe => {
+            if (yesterday && recipe.title.includes(yesterday)) return false;
+            const hasIngredient = userWords.some(word =>
+                recipe.tags.some(t => t.includes(word)) || recipe.title.includes(word)
+            );
+            return hasIngredient;
+        });
+
+        matches.sort((a, b) => {
+            let scoreA = (selectedTime && a.time === selectedTime ? 2 : 0) + (selectedMeal && a.meal === selectedMeal ? 2 : 0);
+            let scoreB = (selectedTime && b.time === selectedTime ? 2 : 0) + (selectedMeal && b.meal === selectedMeal ? 2 : 0);
+            return scoreB - scoreA;
+        });
+
+        if (matches.length === 0) matches = OFFLINE_RECIPES.slice(0, 3);
+
+        matches.forEach(r => addToHistory(r));
+        displayCarousel(matches);
+    }
+
+    function displayCarousel(recipes) {
+        const container = document.getElementById('recipes-carousel');
+        container.innerHTML = recipes.map(r => {
+            const isFav = savedFavs.some(f => f.id === r.id);
+            return `
+            <div class="recipe-card">
+                <img src="${r.image}" class="recipe-img" alt="${r.title}">
+                <div class="recipe-body">
+                    <div class="recipe-meta">
+                        <span class="tag">⏱️ ${r.time}</span>
+                        <span class="tag">🍽️ ${r.meal}</span>
+                    </div>
+                    <h2 class="recipe-title">${r.title}</h2>
+                    <div class="section-h">المكونات:</div>
+                    <ul class="recipe-list">${r.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+                    <div class="section-h">طريقة التحضير:</div>
+                    <ol class="recipe-list">${r.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+                    <div class="card-actions">
+                        <button class="btn-fav ${isFav ? 'saved' : ''}" onclick='toggleFav(${JSON.stringify(r).replace(/'/g, "&apos;")}, this)'>
+                            ${isFav ? '❤️ محفوظة في المفضلة' : '🤍 حفظ في المفضلة'}
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+        switchScreen('results');
+    }
+
+    function addToHistory(recipe) {
+        if (!savedHistory.some(h => h.id === recipe.id)) {
+            savedHistory.unshift(recipe);
+            localStorage.setItem('smart_kitchen_history', JSON.stringify(savedHistory));
+        }
+    }
+
+    function toggleFav(recipe, btn) {
+        const idx = savedFavs.findIndex(f => f.id === recipe.id);
+        if (idx > -1) {
+            savedFavs.splice(idx, 1);
+            btn.classList.remove('saved');
+            btn.innerText = '🤍 حفظ في المفضلة';
+        } else {
+            savedFavs.unshift(recipe);
+            btn.classList.add('saved');
+            btn.innerText = '❤️ محفوظة في المفضلة';
+        }
+        localStorage.setItem('smart_kitchen_favs', JSON.stringify(savedFavs));
+    }
+
+    function renderLibrary(type, btnEl) {
+        if (btnEl) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        let list = type === 'fav' ? savedFavs : (type === 'history' ? savedHistory : OFFLINE_RECIPES);
+        const container = document.getElementById('library-list');
+        if (list.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:30px;">لا توجد وصفات هنا بعد.</p>`;
+            return;
+        }
+        container.innerHTML = list.map(r => `
+            <div class="mini-item" onclick='displayCarousel([${JSON.stringify(r).replace(/'/g, "&apos;")}])'>
+                <img src="${r.image}" alt="${r.title}">
+                <div class="mini-info">
+                    <h4>${r.title}</h4>
+                    <p>⏱️ ${r.time} • ${r.meal}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openAIModal() {
+        if (!navigator.onLine) {
+            alert("أنت غير متصل بالإنترنت حاليًا. هذا الزر يحتاج إنترنت، لكن باقي التطبيق يعمل معك أوفلاين بالكامل!");
+            return;
+        }
+        document.getElementById('ai-modal').classList.add('open');
+    }
+    function closeAIModal() { document.getElementById('ai-modal').classList.remove('open'); }
+
+    function generateAIRecipe() {
+        const prompt = document.getElementById('ai-prompt').value.trim();
+        if (!prompt) return;
+        closeAIModal();
+        const aiRecipe = {
+            id: Date.now(),
+            title: "وصفة مبتكرة: " + prompt.slice(0, 25),
+            time: selectedTime || "من 30 إلى 60 دقيقة",
+            meal: selectedMeal || "غداء",
+            tags: prompt.split(" "),
+            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+            ingredients: ["المكونات التي ذكرتها: " + prompt, "ملح وفلفل حسب الرغبة", "ملعقة زيت زيتون", "بهارات مشكلة"],
+            steps: ["تُجهز المكونات وتُقطع بالتساوي.", "تُطهى على نار متوسطة مع التوابل لمدة 25 دقيقة.", "تُقدم ساخنة وتم حفظها تلقائيًا في مكتبتك لتعمل بدون نت."]
+        };
+        addToHistory(aiRecipe);
+        displayCarousel([aiRecipe]);
+    }
+</script>
+
+</body>
+</html>
